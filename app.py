@@ -283,7 +283,8 @@ def subreddit_whitelist_all():
         for s in data:
             subreddit_list.append(s['subreddit'])
 
-        return jsonify(subreddit_list)
+        return_data = {'status': 'success', 'data': subreddit_list}
+        return return_data
 
     elif request.method == 'POST':
         if not subreddit_whitelist_exists(request.form['subreddit']):
@@ -421,4 +422,4 @@ def user_subreddit_whitelist(username):
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='127.0.0.1', port=8080, debug=False)
