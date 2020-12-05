@@ -66,7 +66,7 @@ def execute_select(query, values=('none',)):
         cur.close()
 
     except Exception as e:
-        data = {'status': 'error', 'action': 'SELECT', 'exception': str(type(e).__name__), 'message': 'Error during execution of query'}
+        data = {'status': 'error', 'data': {'action': 'SELECT', 'exception': str(type(e).__name__), 'message': 'Error during execution of query'}}
     finally:
         cur.close()
 
@@ -85,7 +85,8 @@ def get_all_data():
     for u in data:
         fixed_data[u['username']] = {'subreddit': u['subreddit'], 'type': u['type'], 'content': u['content'], 'date': u['date']}
 
-    return fixed_data
+    return_data = {'status': 'success', 'data': fixed_data}
+    return return_data
 
 
 @app.route('/')
@@ -132,8 +133,8 @@ def user(username):
             cur = mysql.connection.cursor()
             data = execute_select("""SELECT * FROM users WHERE username = %s""", (username,))
 
-            # fixed_data = {data['username']: {'subreddit': data['subreddit'], 'type': data['type'], 'content': data['content'], 'date': data['date']}}
-            return jsonify(data)
+            return_data = {'status': 'success', 'data': data}
+            return jsonify(return_data)
         else:
             return make_error("User does not exist")
 
@@ -189,26 +190,28 @@ def user(username):
 
 @app.route('/subreddits')
 def subreddits():
-    data = get_all_data()
+    data = get_all_data()["data"]
 
     subreddit_data = {}
     for (k, v) in data.items():
         subreddit_data[v["subreddit"]] = subreddit_data.get(v["subreddit"], [])
         subreddit_data[v["subreddit"]].append(k)
 
-    return jsonify(subreddit_data)
+    return_data = {'status': 'success', 'data': subreddit_data}
+    return jsonify(return_data)
 
 
 @app.route('/subreddits/<name>')
 def subreddit(name):
-    data = get_all_data()
+    data = get_all_data()["data"]
 
     user_list = []
     for (k, v) in data.items():
         if v["subreddit"].lower() == name.lower():
             user_list.append(k)
 
-    return jsonify({'name': name, 'count': len(user_list), 'users': user_list})
+    return_data = {'status': 'success', 'data': {'name': name, 'count': len(user_list), 'users': user_list}}
+    return jsonify(return_data)
 
 
 if __name__ == '__main__':
