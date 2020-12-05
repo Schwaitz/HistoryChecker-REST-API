@@ -1,19 +1,19 @@
-from flask import Flask, request, abort, jsonify, render_template
+from flask import Flask, request, jsonify, render_template
 from flask_mysqldb import MySQL
 from datetime import datetime
 import requests
 
-import mysql_config as mysql_config
+import app_config as app_config
 
 app = Flask(__name__)
 
 app.config['TESTING'] = True
-app.config['SECRET_KEY'] = b'Sk\xad\xafd\x1f\x10\x9f\xb2\xd9\x9ea\xednx\x83'
+app.config['SECRET_KEY'] = app_config.SECRET_KEY
 
-app.config['MYSQL_HOST'] = mysql_config.host
-app.config['MYSQL_USER'] = mysql_config.user
-app.config['MYSQL_PASSWORD'] = mysql_config.password
-app.config['MYSQL_DB'] = mysql_config.database
+app.config['MYSQL_HOST'] = app_config.host
+app.config['MYSQL_USER'] = app_config.user
+app.config['MYSQL_PASSWORD'] = app_config.password
+app.config['MYSQL_DB'] = app_config.database
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 app.url_map.strict_slashes = False
@@ -139,7 +139,7 @@ def user(username):
             return make_error("User does not exist")
 
     elif request.method == 'PUT':
-        if request.form['subreddit'] != '' and request.form['type'] != '' and request.form['content'] != '':
+        if request.form['username'] != '' and request.form['subreddit'] != '' and request.form['type'] != '' and request.form['content'] != '':
             if user_exists(username):
                 now_timestamp = timestamp()
                 cur = mysql.connection.cursor()
