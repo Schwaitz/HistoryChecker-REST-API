@@ -6,16 +6,21 @@ html {
 
 body {
     background-image: url("background.png");
-    margin-bottom: 5vh;
 }
 
-h3 {
-    margin-bottom: 0
+.container-fluid {
+    margin-left: 1vw;
 }
 
-ul {
-    margin-top: 0;
-    margin-bottom: 4vh;
-    list-style-type: none;
+#header {
+    margin-bottom: 2vh;
+}
+
+#col-header{
+    text-align: center;
+}
+
+.col-1, .col-2, .col-3 {
+    border: thin solid rgba(0, 0, 0, 0.15);
     padding-left: 0;
 }

@@ -2,29 +2,34 @@
 {% block title %}HCAPI{% endblock %}
 {% block content %}
 
-<h1>HistoryChecker API Endpoints</h1>
+<div id="header" class="row">
+    <h1>HistoryChecker API Endpoints</h1>
+</div>
 
-<h3>GET</h3>
-<ul>
-    <li><a href="/users">/users</a> - data for all users<br/></li>
-    <li><a href="/users/username">/users/username</a> - data for one user</li>
-    <li><a href="/subreddits">/subreddits</a> - data for all subreddits</li>
-    <li><a href="/subreddits/name">/subreddits/name</a> - data for one subreddit</li>
-</ul>
+<div id="col-header" class="row">
+    <div class="col-1">
+        <b>Methods</b>
+    </div>
+    <div class="col-2">
+       <b>Link</b>
+    </div>
+    <div class="col-3">
+       <b>Description</b>
+    </div>
+</div>
 
-<h3>POST</h3>
-<ul>
-    <li><a href="/users">/users/</a> - create new user</li>
-</ul>
-
-<h3>PUT</h3>
-<ul>
-    <li><a href="/users/username">/users/username</a> - update existing user</li>
-</ul>
-
-<h3>DELETE</h3>
-<ul>
-    <li><a href="/users/username">/users/username</a> - delete existing user</li>
-</ul>
+{%for i in range(0, count)%}
+<div class="row">
+    <div class="col-1">
+        {{methods[i]}}
+    </div>
+    <div class="col-2">
+        <a href="{{links[i]}}">{{links[i]}}</a>
+    </div>
+    <div class="col-3">
+        {{descs[i]}}
+    </div>
+</div>
+{%endfor%}
 
 {% endblock %}
