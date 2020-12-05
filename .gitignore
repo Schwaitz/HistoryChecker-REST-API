@@ -1,6 +1,7 @@
 .idea/
 __pycache__/
 setup/
+flaskvenv/
 
 mysql_config.py
 test_mysql.py
