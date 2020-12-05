@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}HCAPI{% endblock %}
+{% block content %}
+
+<h1>HistoryChecker API Endpoints</h1>
+
+<h3>GET</h3>
+<ul>
+    <li><a href="/users">/users</a> - data for all users<br/></li>
+    <li><a href="/users/username">/users/username</a> - data for one user</li>
+    <li><a href="/subreddits">/subreddits</a> - data for all subreddits</li>
+    <li><a href="/subreddits/name">/subreddits/name</a> - data for one subreddit</li>
+</ul>
+
+<h3>POST</h3>
+<ul>
+    <li><a href="/users">/users/</a> - create new user</li>
+</ul>
+
+<h3>PUT</h3>
+<ul>
+    <li><a href="/users/username">/users/username</a> - update existing user</li>
+</ul>
+
+<h3>DELETE</h3>
+<ul>
+    <li><a href="/users/username">/users/username</a> - delete existing user</li>
+</ul>
+
+{% endblock %}
