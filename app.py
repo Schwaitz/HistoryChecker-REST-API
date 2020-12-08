@@ -148,6 +148,10 @@ def get_all_data():
     return return_data
 
 
+def check_password(password):
+    return password == app_config.edit_password
+
+
 @app.route('/')
 def index():
     endpoints = [
@@ -185,15 +189,18 @@ def users():
         return jsonify(get_all_data())
 
     elif request.method == 'POST':
-        if not user_exists(request.form['username']):
-            cur = mysql.connection.cursor()
-            now_timestamp = timestamp()
-            data = execute_insert('users', ['username', 'subreddit', 'type', 'content', 'date'],
-                                  (request.form['username'], request.form["subreddit"], request.form["type"], request.form["content"].encode('unicode_escape'), now_timestamp))
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if not user_exists(request.form['username']):
+                cur = mysql.connection.cursor()
+                now_timestamp = timestamp()
+                data = execute_insert('users', ['username', 'subreddit', 'type', 'content', 'date'],
+                                      (request.form['username'], request.form["subreddit"], request.form["type"], request.form["content"].encode('unicode_escape'), now_timestamp))
+                return jsonify(data)
 
+            else:
+                return make_error("User already exists")
         else:
-            return make_error("User already exists")
+            return make_error("Invalid password")
 
     else:
         return make_error("Invalid request method")
@@ -211,39 +218,45 @@ def user(username):
             return make_error("User does not exist")
 
     elif request.method == 'PUT':
-        if request.form['username'] != '' and request.form['subreddit'] != '' and request.form['type'] != '' and request.form['content'] != '':
-            if user_exists(username):
-                now_timestamp = timestamp()
-                cur = mysql.connection.cursor()
-                return_message = {}
-                try:
-                    cur.execute("""UPDATE users SET subreddit = %s, type = %s, content = %s, date = %s WHERE username = %s""",
-                                (request.form['subreddit'], request.form['type'], request.form['content'], now_timestamp, username))
-                    mysql.connection.commit()
+        if check_password(request.form['password']):
+            if request.form['username'] != '' and request.form['subreddit'] != '' and request.form['type'] != '' and request.form['content'] != '':
+                if user_exists(username):
+                    now_timestamp = timestamp()
+                    cur = mysql.connection.cursor()
+                    return_message = {}
+                    try:
+                        cur.execute("""UPDATE users SET subreddit = %s, type = %s, content = %s, date = %s WHERE username = %s""",
+                                    (request.form['subreddit'], request.form['type'], request.form['content'], now_timestamp, username))
+                        mysql.connection.commit()
 
-                    return_message = jsonify({
-                        'status': 'success', 'action': 'UPDATE',
-                        'data': {'username': request.form['username'], 'subreddit': request.form["subreddit"], 'type': request.form["type"], 'content': request.form["content"], 'date': now_timestamp}
-                    })
-                except Exception as e:
-                    return_message = jsonify({'status': 'error', 'action': 'UPDATE', 'exception': str(type(e).__name__), 'message': 'Error during execution of query'})
-                finally:
-                    cur.close()
-                    return return_message
+                        return_message = jsonify({
+                            'status': 'success', 'action': 'UPDATE',
+                            'data': {'username': request.form['username'], 'subreddit': request.form["subreddit"], 'type': request.form["type"], 'content': request.form["content"],
+                                     'date': now_timestamp}
+                        })
+                    except Exception as e:
+                        return_message = jsonify({'status': 'error', 'action': 'UPDATE', 'exception': str(type(e).__name__), 'message': 'Error during execution of query'})
+                    finally:
+                        cur.close()
+                        return return_message
+
+                else:
+                    return make_error("User does not exist")
+            else:
+                return make_error("Missing fields")
+        else:
+            return make_error("Invalid password")
+
+    elif request.method == 'DELETE':
+        if check_password(request.form['password']):
+            if user_exists(username):
+                data = execute_delete('users', 'username', username)
+                return jsonify(data)
 
             else:
                 return make_error("User does not exist")
         else:
-            return make_error("Missing fields")
-
-
-    elif request.method == 'DELETE':
-        if user_exists(username):
-            data = execute_delete('users', 'username', username)
-            return jsonify(data)
-
-        else:
-            return make_error("User does not exist")
+            return make_error("Invalid password")
 
     else:
         return make_error("Invalid request method")
@@ -287,11 +300,15 @@ def subreddit_whitelist_all():
         return return_data
 
     elif request.method == 'POST':
-        if not subreddit_whitelist_exists(request.form['subreddit']):
-            data = execute_insert('subreddit_whitelist', ['subreddit'], (request.form['subreddit'],))
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if not subreddit_whitelist_exists(request.form['subreddit']):
+                data = execute_insert('subreddit_whitelist', ['subreddit'], (request.form['subreddit'],))
+                return jsonify(data)
+            else:
+                return make_error("Subreddit already whitelisted")
         else:
-            return make_error("Subreddit already whitelisted")
+            return make_error("Invalid password")
+
     else:
         return make_error("Invalid request method")
 
@@ -306,11 +323,15 @@ def subreddit_whitelist(subreddit):
         else:
             return make_error("Subreddit not in whitelist")
     elif request.method == 'DELETE':
-        if subreddit_whitelist_exists(subreddit):
-            data = execute_delete('subreddit_whitelist', 'subreddit', subreddit)
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if subreddit_whitelist_exists(subreddit):
+                data = execute_delete('subreddit_whitelist', 'subreddit', subreddit)
+                return jsonify(data)
+            else:
+                return make_error("Subreddit not in whitelist")
         else:
-            return make_error("Subreddit not in whitelist")
+            return make_error("Invalid password")
+
     else:
         return make_error("Invalid request method")
 
@@ -327,11 +348,15 @@ def user_whitelist_all():
         return jsonify(return_data)
 
     elif request.method == 'POST':
-        if not user_whitelist_exists(request.form['username']):
-            data = execute_insert('user_whitelist', ['username'], (request.form['username'],))
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if not user_whitelist_exists(request.form['username']):
+                data = execute_insert('user_whitelist', ['username'], (request.form['username'],))
+                return jsonify(data)
+            else:
+                return make_error("User already whitelisted")
         else:
-            return make_error("User already whitelisted")
+            return make_error("Invalid password")
+
     else:
         return make_error("Invalid request method")
 
@@ -346,11 +371,15 @@ def user_whitelist(username):
         else:
             return make_error("User not in whitelist")
     elif request.method == 'DELETE':
-        if user_whitelist_exists(username):
-            data = execute_delete('user_whitelist', 'username', username)
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if user_whitelist_exists(username):
+                data = execute_delete('user_whitelist', 'username', username)
+                return jsonify(data)
+            else:
+                return make_error("User not in whitelist")
         else:
-            return make_error("User not in whitelist")
+            return make_error("Invalid password")
+
     else:
         return make_error("Invalid request method")
 
@@ -368,11 +397,15 @@ def user_subreddit_whitelist_all():
         return return_data
 
     elif request.method == 'POST':
-        if not user_subreddit_whitelist_exists(request.form['username']):
-            data = execute_insert('user_subreddit_whitelist', ['username', 'subreddits'], (request.form['username'], request.form['subreddits']))
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if not user_subreddit_whitelist_exists(request.form['username']):
+                data = execute_insert('user_subreddit_whitelist', ['username', 'subreddits'], (request.form['username'], request.form['subreddits']))
+                return jsonify(data)
+            else:
+                return make_error("User Subreddit whitelist already exists")
         else:
-            return make_error("User Subreddit whitelist already exists")
+            return make_error("Invalid password")
+
     else:
         return make_error("Invalid request method")
 
@@ -389,34 +422,41 @@ def user_subreddit_whitelist(username):
         else:
             return make_error("User Subreddit whitelist does not exist")
     elif request.method == 'PUT':
-        if request.form['subreddits'] != '':
-            if user_subreddit_whitelist_exists(username):
-                cur = mysql.connection.cursor()
+        if check_password(request.form['password']):
+            if request.form['subreddits'] != '':
+                if user_subreddit_whitelist_exists(username):
+                    cur = mysql.connection.cursor()
 
-                return_message = {}
-                try:
-                    cur.execute("""UPDATE user_subreddit_whitelist SET subreddits = %s WHERE username = %s""", (request.form['subreddits'], username))
-                    mysql.connection.commit()
+                    return_message = {}
+                    try:
+                        cur.execute("""UPDATE user_subreddit_whitelist SET subreddits = %s WHERE username = %s""", (request.form['subreddits'], username))
+                        mysql.connection.commit()
 
-                    return_message = jsonify({
-                        'status': 'success', 'action': 'UPDATE',
-                        'data': {'username': username, 'subreddits': request.form['subreddits']}
-                    })
-                except Exception as e:
-                    return_message = jsonify({'status': 'error', 'action': 'UPDATE', 'exception': str(type(e).__name__), 'message': 'Error during execution of query'})
-                finally:
-                    cur.close()
-                    return return_message
+                        return_message = jsonify({
+                            'status': 'success', 'action': 'UPDATE',
+                            'data': {'username': username, 'subreddits': request.form['subreddits']}
+                        })
+                    except Exception as e:
+                        return_message = jsonify({'status': 'error', 'action': 'UPDATE', 'exception': str(type(e).__name__), 'message': 'Error during execution of query'})
+                    finally:
+                        cur.close()
+                        return return_message
 
-            else:
-                return make_error("User does not exist")
+                else:
+                    return make_error("User does not exist")
+        else:
+            return make_error("Invalid password")
 
     elif request.method == 'DELETE':
-        if user_subreddit_whitelist_exists(username):
-            data = execute_delete('user_subreddit_whitelist', 'username', username)
-            return jsonify(data)
+        if check_password(request.form['password']):
+            if user_subreddit_whitelist_exists(username):
+                data = execute_delete('user_subreddit_whitelist', 'username', username)
+                return jsonify(data)
+            else:
+                return make_error("User Subreddit whitelist does not exist")
         else:
-            return make_error("User Subreddit whitelist does not exist")
+            return make_error("Invalid password")
+
     else:
         return make_error("Invalid request method")
 
