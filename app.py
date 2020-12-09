@@ -21,26 +21,6 @@ app.url_map.strict_slashes = False
 mysql = MySQL(app)
 
 
-def get_found():
-    return requests.get("http://schwaitz.com:8080/data/found.json").json()
-
-
-def get_found_lower():
-    return dict((k.lower(), v) for k, v in get_found().items())
-
-
-def user_in_found(username):
-    return username.lower() in get_found_lower()
-
-
-def subreddit_in_found(name):
-    for (k, v) in get_found_lower():
-        if v["subreddit"] == name.lower():
-            return True
-
-    return False
-
-
 def make_error(message):
     return jsonify({'status': 'fail', 'message': message})
 
